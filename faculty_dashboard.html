@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard | Live Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            padding: 40px;
+            gap: 40px;
+        }
+
+        /* Left: QR Display */
+        .qr-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .qr-section h2 {
+            font-family: 'Outfit';
+            font-size: 28px;
+            margin-bottom: 30px;
+        }
+
+        #qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .rotation-timer {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timer-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .timer-progress {
+            height: 100%;
+            background: var(--primary);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* Right: Live List */
+        .list-section {
+            width: 450px;
+            background: var(--card);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .count-badge {
+            background: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .student-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .student-info {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .student-meta {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .time-tag {
+            font-size: 11px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .session-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .btn-end {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: auto;
+            margin-bottom: 30px;
+            transition: 0.2s;
+        }
+
+        .btn-end:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <!-- QR Section -->
+        <div class="qr-section">
+            <div class="session-info">
+                <p id="info-text">Session Loading...</p>
+            </div>
+            <h2>Scan to Mark Present</h2>
+            <div id="qr-container"></div>
+
+            <div class="rotation-timer">
+                <i data-lucide="refresh-cw" style="width: 14px;"></i>
+                <span>Rotating QR Code for Security</span>
+            </div>
+            <div class="timer-bar">
+                <div class="timer-progress" id="progress"></div>
+            </div>
+
+            <button class="btn-end" onclick="endSession()">End Session</button>
+        </div>
+
+        <!-- Live List Section -->
+        <div class="list-section">
+            <div class="list-header">
+                <h3>Live Attendance</h3>
+                <div class="count-badge"><span id="present-count">0</span> Present</div>
+            </div>
+            <div class="student-list" id="student-list">
+                <!-- Students appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + "/api";
+        const sessionId = localStorage.getItem("current_session_id");
+        const token = localStorage.getItem("access_token");
+
+        if (!sessionId || !token) {
+            window.location.href = 'login.html';
+        }
+
+        lucide.createIcons();
+        let scannedIds = new Set();
+
+        // 1. Fetch QR rotating payload
+        async function refreshQR() {
+            try {
+                const res = await fetch(`${API_BASE}/sessions/${sessionId}/qr`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    generateQR(data.qr_payload);
+                    resetTimer();
+                }
+            } catch (e) { console.error("QR Refresh failed", e); }
+        }
+
+        function generateQR(payload) {
+            const typeNumber = 0;
+            const errorCorrectionLevel = 'H';
+            const qr = qrcode(typeNumber, errorCorrectionLevel);
+            qr.addData(payload);
+            qr.make();
+            document.getElementById('qr-container').innerHTML = qr.createSvgTag(8);
+        }
+
+        // 2. Fetch Live Attendance List
+        async function fetchLiveAttendance() {
+            try {
+                const res = await fetch(`${API_BASE}/sessions/${sessionId}/live`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    updateList(data.attendance);
+                    document.getElementById('info-text').innerText = `${data.session.branch} ${data.session.semester} | ${data.session.subject}`;
+                }
+            } catch (e) { console.error("Live list failed", e); }
+        }
+
+        function updateList(students) {
+            const listEl = document.getElementById("student-list");
+            document.getElementById("present-count").innerText = students.length;
+
+            students.forEach(s => {
+                if (!scannedIds.has(s.student_id)) {
+                    scannedIds.add(s.student_id);
+                    const item = document.createElement('div');
+                    item.className = 'student-item';
+                    item.innerHTML = `
+                        <div class="student-avatar">${s.name[0]}</div>
+                        <div class="student-info">
+                            <div class="student-name">${s.name}</div>
+                            <div class="student-meta">${s.roll_no}</div>
+                        </div>
+                        <div class="time-tag">${new Date(s.marked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    `;
+                    listEl.prepend(item);
+                }
+            });
+        }
+
+        function resetTimer() {
+            const prog = document.getElementById("progress");
+            prog.style.transition = 'none';
+            prog.style.width = '100%';
+            setTimeout(() => {
+                prog.style.transition = 'width 30s linear';
+                prog.style.width = '0%';
+            }, 50);
+        }
+
+        function endSession() {
+            if (confirm("End this session and save records?")) {
+                localStorage.removeItem("current_session_id");
+                window.location.href = "faculty_create_session.html";
+            }
+        }
+
+        // Start Intervals
+        refreshQR();
+        setInterval(refreshQR, 30000); // Rotate QR every 30s
+        setInterval(fetchLiveAttendance, 3000); // Polling for new students
+        fetchLiveAttendance();
+
+    </script>
+</body>
+
+</html>

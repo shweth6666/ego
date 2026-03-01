@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Command Center | QR Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #020617;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 50px;
+            padding: 0 10px;
+        }
+
+        .logo-box {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-light);
+        }
+
+        .nav-item.active i {
+            color: var(--primary);
+        }
+
+        .user-profile {
+            margin-top: auto;
+            padding: 20px 10px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            overflow: hidden;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h2 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-title p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .content-body {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        /* Dashboard Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-card i {
+            color: var(--primary);
+        }
+
+        .stat-card h3 {
+            color: var(--text-dim);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .val {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Outfit';
+        }
+
+        /* Tables */
+        .card-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px 24px;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-student {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+        }
+
+        .badge-faculty {
+            background: rgba(168, 85, 247, 0.1);
+            color: #c084fc;
+        }
+
+        .badge-admin {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+        }
+
+        .btn-icon.delete:hover {
+            color: var(--danger);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: white;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Tab Visibility */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-box"><i data-lucide="qr-code" stroke="white"></i></div>
+                <div class="logo-text">QR ADMIN</div>
+            </div>
+
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="switchTab('overview')">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </li>
+                <li class="nav-item" onclick="switchTab('users')">
+                    <i data-lucide="users"></i> User Management
+                </li>
+                <li class="nav-item" onclick="switchTab('subjects')">
+                    <i data-lucide="book-open"></i> Subject Registry
+                </li>
+                <li class="nav-item" onclick="switchTab('reports')">
+                    <i data-lucide="bar-chart-3"></i> Attendance Reports
+                </li>
+            </ul>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin">
+                </div>
+                <div class="user-info">
+                    <div id="adminName" style="font-weight: 600; font-size: 14px;">Master Admin</div>
+                    <div style="color: var(--text-dim); font-size: 12px; cursor: pointer;" onclick="logout()">Sign Out
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header>
+                <div class="header-title">
+                    <h2 id="currentTabTitle">System Overview</h2>
+                    <p id="currentTabSub">Live metrics and system status at a glance.</p>
+                </div>
+                <div class="header-actions" id="tabSpecificActions">
+                    <!-- Actions injected here based on tab -->
+                </div>
+            </header>
+
+            <div class="content-body" id="mainDisplay">
+
+                <!-- OVERVIEW TAB -->
+                <div id="overview" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i data-lucide="users"></i>
+                            <h3>Total Registered</h3>
+                            <div class="val" id="countTotal">..</div>
+                        </div>
+                        <div class="stat-card">
+                            <i data-lucide="graduation-cap"></i>
+                            <h3>Students</h3>
+                            <div class="val" id="countStudents">..</div>
+                        </div>
+                        <div class="stat-card">
+                            <i data-lucide="user-cog"></i>
+                            <h3>Faculty</h3>
+                            <div class="val" id="countFaculty">..</div>
+                        </div>
+                        <div class="stat-card">
+                            <i data-lucide="library"></i>
+                            <h3>Subjects</h3>
+                            <div class="val" id="countSubjects">..</div>
+                        </div>
+                    </div>
+
+                    <div class="card-table">
+                        <div class="table-header">
+                            <h3>Recently Registered Users</h3>
+                            <button class="btn-primary" onclick="switchTab('users')">View All</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NAME</th>
+                                    <th>USERNAME</th>
+                                    <th>ROLE</th>
+                                    <th>DEPARTMENT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentUsersTable">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- USERS TAB -->
+                <div id="users" class="tab-content">
+                    <div class="card-table">
+                        <div class="table-header">
+                            <h3>User Management</h3>
+                            <button class="btn-primary" onclick="openModal('userModal')"><i data-lucide="plus"></i> Add
+                                User</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NAME</th>
+                                    <th>ROLE</th>
+                                    <th>BRANCH</th>
+                                    <th>ROLL NO / SEM</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fullUsersTable">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUBJECTS TAB -->
+                <div id="subjects" class="tab-content">
+                    <div class="card-table" style="max-width: 900px; margin: 0 auto;">
+                        <div class="table-header">
+                            <h3>Subject Registry</h3>
+                            <button class="btn-primary" onclick="openModal('subjectModal')"><i data-lucide="plus"></i>
+                                Add Subject</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>CODE</th>
+                                    <th>SUBJECT NAME</th>
+                                    <th>STREAM</th>
+                                    <th>SEMESTER</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectsTable">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- REPORTS TAB -->
+                <div id="reports" class="tab-content">
+                    <div class="stats-grid"
+                        style="grid-template-columns: 1fr 1fr; max-width: 800px; margin: 0 auto 30px;">
+                        <div class="stat-card" style="align-items: center; text-align: center;">
+                            <i data-lucide="calendar" style="width: 48px; height: 48px;"></i>
+                            <h3>Generate Weekly</h3>
+                            <button class="btn-primary" style="margin-top: 10px;"
+                                onclick="exportReport('weekly')">Download CSV</button>
+                        </div>
+                        <div class="stat-card" style="align-items: center; text-align: center;">
+                            <i data-lucide="calendar-days" style="width: 48px; height: 48px;"></i>
+                            <h3>Generate Monthly</h3>
+                            <button class="btn-primary" style="margin-top: 10px;"
+                                onclick="exportReport('monthly')">Download CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: ADD USER -->
+    <div id="userModal" class="modal-overlay">
+        <div class="modal">
+            <h2>Register New User</h2>
+            <form id="userForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="u_name" placeholder="John Doe" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="u_username" placeholder="john.doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="u_password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="u_role">
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <input type="text" id="u_branch" placeholder="CSE">
+                    </div>
+                    <div class="form-group">
+                        <label>Roll No / Sems</label>
+                        <input type="text" id="u_roll" placeholder="NIE23CS01">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn-primary" style="background: var(--bg-card);"
+                        onclick="closeModal('userModal')">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex-grow: 1; justify-content: center;">Save
+                        User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD SUBJECT -->
+    <div id="subjectModal" class="modal-overlay">
+        <div class="modal">
+            <h2>Add Subject</h2>
+            <form id="subjectForm">
+                <div class="form-group">
+                    <label>Subject Code</label>
+                    <input type="text" id="s_code" placeholder="CS601" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="s_name" placeholder="Artificial Intelligence" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <input type="text" id="s_branch" placeholder="CSE">
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <input type="text" id="s_semester" placeholder="S6">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn-primary" style="background: var(--bg-card);"
+                        onclick="closeModal('subjectModal')">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex-grow: 1; justify-content: center;">Add
+                        Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + "/api";
+        const TOKEN = localStorage.getItem('access_token');
+
+        // Redirect if not logged in or not admin
+        if (!TOKEN) window.location.href = 'login.html';
+
+        lucide.createIcons();
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            const titles = {
+                overview: ["System Overview", "Live metrics and system status at a glance."],
+                users: ["User Management", "Analyze, search, and manage platform participants."],
+                subjects: ["Subject Registry", "Maintain the central catalogue of academic subjects."],
+                reports: ["Attendance Reports", "Export data for academic validation and logging."]
+            };
+
+            document.getElementById('currentTabTitle').innerText = titles[tabId][0];
+            document.getElementById('currentTabSub').innerText = titles[tabId][1];
+
+            if (tabId === 'overview') loadOverview();
+            if (tabId === 'users') loadUsers();
+            if (tabId === 'subjects') loadSubjects();
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- DATA FETCHING ---
+
+        async function loadOverview() {
+            const res = await fetch(`${API_BASE}/admin/users`, {
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const users = data.users;
+                document.getElementById('countTotal').innerText = data.pagination.total_users;
+                document.getElementById('countStudents').innerText = users.filter(u => u.role === 'student').length;
+                document.getElementById('countFaculty').innerText = users.filter(u => u.role === 'faculty').length;
+
+                // Load recent table
+                const table = document.getElementById('recentUsersTable');
+                table.innerHTML = users.slice(0, 5).map(u => `
+                    <tr>
+                        <td><div style="font-weight:600">${u.name || 'N/A'}</div></td>
+                        <td>${u.username}</td>
+                        <td><span class="badge badge-${u.role}">${u.role.toUpperCase()}</span></td>
+                        <td>${u.branch || '--'}</td>
+                    </tr>
+                `).join('');
+            }
+            // Fetch subjects count separately
+            const sRes = await fetch(`${API_BASE}/admin/subjects`, { headers: { 'Authorization': `Bearer ${TOKEN}` } });
+            const sData = await sRes.json();
+            if (sData.success) document.getElementById('countSubjects').innerText = sData.subjects.length;
+        }
+
+        async function loadUsers() {
+            const res = await fetch(`${API_BASE}/admin/users?per_page=100`, {
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const table = document.getElementById('fullUsersTable');
+                table.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td><div style="font-weight:600; font-size: 15px;">${u.name || 'Unnamed'}</div><div style="font-size:12px;color:var(--text-dim)">@${u.username}</div></td>
+                        <td><span class="badge badge-${u.role}">${u.role.toUpperCase()}</span></td>
+                        <td>${u.branch || 'None'}</td>
+                        <td style="font-family: monospace">${u.roll_no || u.semester || '--'}</td>
+                        <td style="display: flex; gap: 10px;">
+                            ${u.role === 'student' ? `<button class="btn-icon" title="Reset Device Link" onclick="resetDevice(${u.id})"><i data-lucide="shield-off"></i></button>` : ''}
+                            <button class="btn-icon delete" title="Delete User" onclick="deleteUser(${u.id})"><i data-lucide="trash-2"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            }
+        }
+
+        async function loadSubjects() {
+            const res = await fetch(`${API_BASE}/admin/subjects`, {
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const table = document.getElementById('subjectsTable');
+                table.innerHTML = data.subjects.map(s => `
+                    <tr>
+                        <td style="font-weight:700; color: var(--primary-light)">${s.code}</td>
+                        <td>${s.name}</td>
+                        <td>${s.branch}</td>
+                        <td>${s.semester}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // --- FORM SUBMISSIONS ---
+
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                username: document.getElementById('u_username').value,
+                password: document.getElementById('u_password').value,
+                role: document.getElementById('u_role').value,
+                name: document.getElementById('u_name').value,
+                branch: document.getElementById('u_branch').value,
+                roll_no: document.getElementById('u_roll').value,
+                semester: document.getElementById('u_role').value === 'student' ? 'S6' : null
+            };
+
+            const res = await fetch(`${API_BASE}/admin/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('userModal');
+                loadUsers();
+                e.target.reset();
+            } else alert(data.message);
+        });
+
+        document.getElementById('subjectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                code: document.getElementById('s_code').value,
+                name: document.getElementById('s_name').value,
+                branch: document.getElementById('s_branch').value,
+                semester: document.getElementById('s_semester').value
+            };
+
+            const res = await fetch(`${API_BASE}/admin/subjects`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('subjectModal');
+                loadSubjects();
+                e.target.reset();
+            } else alert(data.message);
+        });
+
+        async function deleteUser(id) {
+            if (!confirm("Are you sure you want to remove this user? This action is permanent.")) return;
+            const res = await fetch(`${API_BASE}/admin/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            if (data.success) loadUsers();
+            else alert(data.message);
+        }
+
+        async function resetDevice(id) {
+            if (!confirm("Are you sure you want to reset the device binding for this student? They will be able to login from a new device.")) return;
+            const res = await fetch(`${API_BASE}/admin/users/${id}/reset-device`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Device binding reset successfully.");
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function exportReport(period) {
+            // Since our backend endpoint for CSV is a POST / api / admin / reports / export
+            // We need to trigger a file download. For simplicity, we filter some defaults
+            const response = await fetch(`${API_BASE}/admin/reports/export`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                body: JSON.stringify({
+                    branch: "CSE",
+                    semester: "S6",
+                    subject: "Compiler Design",
+                    period: period
+                })
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `attendance_${period}_report.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("Failed to generate report. Ensure sessions exist for the selected criteria.");
+            }
+        }
+
+        // Initialize
+        loadOverview();
+    </script>
+</body>
+
+</html>

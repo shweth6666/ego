@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+qr_attendance.db
+.env
+.vscode/

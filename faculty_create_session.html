@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Faculty - Create Session</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background: #f0f2f5;
+            padding-top: 50px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Start Attendance</h2>
+        <p>Please ensure GPS is enabled.</p>
+
+        <input type="text" id="branch" placeholder="Branch (e.g. CSE)" />
+        <input type="text" id="semester" placeholder="Semester (e.g. S6)" />
+        <input type="text" id="subject" placeholder="Subject (e.g. Compiler Design)" />
+
+        <button id="startBtn" onclick="requestLocation()">Start Session</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + "/api";
+        // In a real app, you get this token from your login page
+        const TOKEN = localStorage.getItem("access_token");
+
+        function requestLocation() {
+            const statusMsg = document.getElementById("status");
+            statusMsg.innerText = "Requesting GPS Permission...";
+            statusMsg.style.color = "blue";
+
+            if (!navigator.geolocation) {
+                statusMsg.innerText = "Geolocation is not supported by your browser.";
+                statusMsg.style.color = "red";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    createSession(pos.coords.latitude, pos.coords.longitude);
+                },
+                (err) => {
+                    statusMsg.innerText = "Error: " + err.message + ". Please enable Location Services.";
+                    statusMsg.style.color = "red";
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        }
+
+        function createSession(lat, lng) {
+            const branch = document.getElementById("branch").value;
+            const semester = document.getElementById("semester").value;
+            const subject = document.getElementById("subject").value;
+            const statusMsg = document.getElementById("status");
+
+            if (!branch || !semester || !subject) {
+                statusMsg.innerText = "Please fill all fields.";
+                return;
+            }
+
+            statusMsg.innerText = "Creating session...";
+
+            fetch(`${API_BASE}/sessions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${TOKEN}`
+                },
+                body: JSON.stringify({
+                    branch: branch,
+                    semester: semester,
+                    subject: subject,
+                    latitude: lat,
+                    longitude: lng
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        statusMsg.innerText = "Session Started! Redirecting...";
+                        statusMsg.style.color = "green";
+                        localStorage.setItem("current_session_id", data.session_id);
+                        setTimeout(() => {
+                            window.location.href = "faculty_dashboard.html";
+                        }, 1000);
+                    } else {
+                        statusMsg.innerText = "Error: " + data.message;
+                        statusMsg.style.color = "red";
+                    }
+                })
+                .catch(err => {
+                    statusMsg.innerText = "Server error. Is the backend running?";
+                    statusMsg.style.color = "red";
+                });
+        }
+    </script>
+
+</body>
+
+</html>

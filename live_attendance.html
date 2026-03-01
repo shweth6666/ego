@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Live Attendance</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #2c3e50;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2 style="text-align:center;">Live Attendance</h2>
+  <input id="sessionId" placeholder="Enter Session ID" />
+  <button onclick="start()">Start Live</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Roll No</th>
+        <th>Status</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    let timer = null;
+
+    function start() {
+      const sessionId = document.getElementById("sessionId").value;
+      if (!sessionId) return alert("Enter session id");
+
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => load(sessionId), 3000);
+      load(sessionId);
+    }
+
+    function load(sessionId) {
+      fetch(`${window.location.origin}/api/sessions/${sessionId}/live`)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById("rows");
+          tbody.innerHTML = "";
+          data.attendance.forEach(a => {
+            tbody.innerHTML += `
+          <tr>
+            <td>${a.name}</td>
+            <td>${a.roll_no}</td>
+            <td>${a.status}</td>
+            <td>${new Date(a.time).toLocaleTimeString()}</td>
+          </tr>
+        `;
+          });
+        });
+    }
+  </script>
+
+</body>
+
+</html>

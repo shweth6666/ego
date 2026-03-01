@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Student - Scan Attendance</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial;
+      text-align: center;
+      background: #f4f6f9;
+      padding-top: 30px;
+    }
+
+    #reader {
+      width: 350px;
+      margin: 20px auto;
+      border: 5px solid #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .permission-box {
+      background: #fff;
+      padding: 15px;
+      display: inline-block;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 5px solid #007bff;
+    }
+
+    #connection-status {
+      margin: -10px auto 20px;
+      padding: 12px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .offline {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .online {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .btn-small {
+      background: #1e293b;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 10px;
+      transition: 0.2s;
+    }
+
+    .btn-small:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="connection-status"></div>
+
+  <div class="permission-box">
+    <strong>GPS Activation:</strong> You must allow Location access to mark your attendance.
+  </div>
+
+  <h2>Scan QR Code</h2>
+  <div id="reader"></div>
+
+  <div class="controls">
+    <button id="torchBtn" class="btn-small" style="display:none;" onclick="toggleTorch()">🔦 Toggle Torch</button>
+  </div>
+
+  <p id="status">Waiting for Scan...</p>
+
+  <script>
+    const API_BASE = window.location.origin + "/api";
+    const TOKEN = localStorage.getItem("access_token");
+    let isTorchOn = false;
+
+    // --- Connection Monitor ---
+    function updateOnlineStatus() {
+      const statusEl = document.getElementById("connection-status");
+      if (!navigator.onLine) {
+        statusEl.innerText = "⚠️ You are offline. Attendance will send when connection returns.";
+        statusEl.className = "offline";
+        statusEl.style.display = "block";
+      } else {
+        statusEl.style.display = "none";
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    function onScanSuccess(qrPayload) {
+      document.getElementById("status").innerText = "QR Detected! Verifying location...";
+      document.getElementById("status").style.color = "blue";
+
+      // Stop the scanner to prevent double scans
+      html5QrcodeScanner.clear();
+
+      requestLocationAndMark(qrPayload);
+    }
+
+    function requestLocationAndMark(qrPayload) {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by this browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          markAttendance(qrPayload, pos.coords.latitude, pos.coords.longitude);
+        },
+        (err) => {
+          document.getElementById("status").innerText = "Location access denied. Please enable GPS.";
+          document.getElementById("status").style.color = "red";
+          alert("Error: " + err.message + ". You must enable GPS to mark attendance.");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    function markAttendance(qrPayload, lat, lng) {
+      fetch(`${API_BASE}/attendance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${TOKEN}`
+        },
+        body: JSON.stringify({
+          qr_payload: qrPayload,
+          latitude: lat,
+          longitude: lng
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const statusEl = document.getElementById("status");
+          if (data.success) {
+            statusEl.innerText = "✅ Attendance Marked: " + data.status;
+            statusEl.style.color = "green";
+          } else {
+            statusEl.innerText = "❌ Failed: " + data.message;
+            statusEl.style.color = "red";
+          }
+        })
+        .catch(() => {
+          alert("Network error connecting to backend.");
+        });
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+      fps: 15,
+      qrbox: 250,
+      aspectRatio: 1.0
+    });
+
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // --- Torch/Flashlight Control ---
+    async function toggleTorch() {
+      try {
+        const track = html5QrcodeScanner.getHtml5Qrcode().getScannerComponent().getVideoTrack();
+        if (track && track.getCapabilities().torch) {
+          isTorchOn = !isTorchOn;
+          await track.applyConstraints({
+            advanced: [{ torch: isTorchOn }]
+          });
+        }
+      } catch (err) {
+        console.warn("Torch not supported on this device/browser");
+      }
+    }
+
+    // Attempt to show torch button if supported
+    setTimeout(async () => {
+      try {
+        const html5Qr = html5QrcodeScanner.getHtml5Qrcode();
+        // It takes a second for the stream to initialize
+        const track = html5Qr.getScannerComponent()?.getVideoTrack();
+        if (track && track.getCapabilities().torch) {
+          document.getElementById("torchBtn").style.display = "inline-block";
+        }
+      } catch (e) { }
+    }, 2000);
+  </script>
+
+</body>
+
+</html>
