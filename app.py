@@ -89,9 +89,7 @@ def init_db():
     if cur.fetchone()[0] == 0:
         print("Seeding default users...")
         default_users = [
-            ("admin1", generate_password_hash("admin123"), "admin", "Admin User"),
-            ("faculty1", generate_password_hash("faculty123"), "faculty", "Faculty User"),
-            ("student1", generate_password_hash("student123"), "student", "Student User")
+            ("admin1", generate_password_hash("admin123"), "admin", "Admin User")
         ]
         for username, password, role, name in default_users:
             cur.execute(
@@ -99,6 +97,53 @@ def init_db():
                 (username, password, role, name)
             )
         conn.commit()
+
+    # 📂 Import students from CSV if available
+    try:
+        if os.path.exists("students.csv"):
+            with open("students.csv", newline='', encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    cur.execute("""
+                        INSERT OR IGNORE INTO users 
+                        (username, password, role, name, roll_no, branch, semester)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        row["username"],
+                        generate_password_hash(row["password"]),
+                        row["role"],
+                        row["name"],
+                        row["roll_no"],
+                        row["branch"],
+                        row["semester"]
+                    ))
+            conn.commit()
+            print("Student CSV data imported successfully.")
+    except Exception as e:
+        print(f"Error importing students: {e}")
+
+    # 🧑‍🏫 Import faculty from CSV if available
+    try:
+        if os.path.exists("faculty.csv"):
+            with open("faculty.csv", newline='', encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    cur.execute("""
+                        INSERT OR IGNORE INTO users 
+                        (username, password, role, name, branch, semester)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        row["username"],
+                        generate_password_hash(row["password"]),
+                        "faculty",
+                        row["name"],
+                        row["branch"],
+                        row["semester"]
+                    ))
+            conn.commit()
+            print("Faculty CSV data imported successfully.")
+    except Exception as e:
+        print(f"Error importing faculty: {e}")
 
     conn.close()
 
