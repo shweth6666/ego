@@ -65,6 +65,7 @@
         <input type="text" id="subject" placeholder="Subject (e.g. Compiler Design)" />
 
         <button id="startBtn" onclick="requestLocation()">Start Session</button>
+        <div id="locationDisplay" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
         <p id="status"></p>
     </div>
 
@@ -75,6 +76,7 @@
 
         function requestLocation() {
             const statusMsg = document.getElementById("status");
+            const locDisplay = document.getElementById("locationDisplay");
             statusMsg.innerText = "Requesting GPS Permission...";
             statusMsg.style.color = "blue";
 
@@ -86,7 +88,10 @@
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    createSession(pos.coords.latitude, pos.coords.longitude);
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    locDisplay.innerText = `Current Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    createSession(lat, lng);
                 },
                 (err) => {
                     statusMsg.innerText = "Error: " + err.message + ". Please enable Location Services.";
