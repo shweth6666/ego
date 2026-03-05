@@ -16,16 +16,17 @@ from cryptography.fernet import InvalidToken
 
 app = Flask(__name__)
 CORS(app)
+app.url_map.strict_slashes = False
 
-# 🔑 Secuirty Keys
-app.config["JWT_SECRET_KEY"] = "super-secret-key" # Change in production!
+# 🔑 Secuirty Keys - PERSISTENT for Render
+# We use a fixed key so that if Render restarts, tokens and QR codes still work.
+app.config["JWT_SECRET_KEY"] = "attendance-system-v1-key-2024" 
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 jwt = JWTManager(app)
 
-# 🗝️ Encryption for QR codes
-# In a real app, store this key securely!
-SECRET_KEY = Fernet.generate_key()
-cipher_suite = Fernet(SECRET_KEY)
+# 🗝️ Encryption for QR codes - Fixed key for persistence
+# We use a fixed key so that if Render restarts, existing QR codes can still be decrypted.
+cipher_suite = Fernet(b'O1_pSjV5Y3FmX3Z0X2JzX3NlY3JldF9rZXlfMTIzNDU2Nzg=')
 
 DATABASE = "qr_attendance.db"
 
@@ -872,30 +873,43 @@ def list_subjects():
     return jsonify({"success": True, "subjects": [dict(r) for r in rows]})
 
 
-# 🌐 Serve Static & HTML Files (Must be at the END to avoid route collisions)
+
+# � Error Handlers (Return JSON instead of HTML)
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return jsonify({"success": False, "message": "API endpoint not found"}), 404
+    return send_from_directory('.', 'login.html')
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"🔥 Server Error: {e}")
+    return jsonify({"success": False, "message": "Internal server error", "error": str(e)}), 500
+
+# 🌐 Serve Static & HTML Files
 @app.route("/")
 def home():
     return send_from_directory('.', 'login.html')
 
 @app.route("/<path:path>")
 def serve_files(path):
-    # Ignore API requests - they should be handled by specific routes above
     if path.startswith("api/"):
-        return jsonify({"success": False, "message": "API endpoint not found"}), 404
+        return jsonify({"success": False, "message": "API path error"}), 404
         
-    # Security: Don't serve sensitive files
     if path in [".env", "qr_attendance.db", "app.py", "students.csv", "faculty.csv"]:
         return "Access denied", 403
 
-    # Try serving the file directly (covers .png, .json, .css, .html)
     try:
         if os.path.exists(path):
             return send_from_directory('.', path)
         if os.path.exists(path + ".html"):
             return send_from_directory('.', path + ".html")
-        return "File not found", 404
+        # For PWA support: return icons or manifest
+        if "icon" in path or "manifest" in path:
+             return send_from_directory('.', path)
+        return send_from_directory('.', 'login.html')
     except Exception:
-        return "Internal error", 500
+        return send_from_directory('.', 'login.html')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
