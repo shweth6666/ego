@@ -230,16 +230,7 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-# 🌐 Serve HTML Files
-@app.route("/")
-def home():
-    return send_from_directory('.', 'login.html')
 
-@app.route("/<path:filename>")
-def serve_static(filename):
-    if filename.endswith(".html"):
-        return send_from_directory('.', filename)
-    return "File not found", 404
 
 # 🔐 Login API
 @app.route("/api/login", methods=["POST"])
@@ -879,6 +870,32 @@ def list_subjects():
     rows = cur.fetchall()
     conn.close()
     return jsonify({"success": True, "subjects": [dict(r) for r in rows]})
+
+
+# 🌐 Serve Static & HTML Files (Must be at the END to avoid route collisions)
+@app.route("/")
+def home():
+    return send_from_directory('.', 'login.html')
+
+@app.route("/<path:path>")
+def serve_files(path):
+    # Ignore API requests - they should be handled by specific routes above
+    if path.startswith("api/"):
+        return jsonify({"success": False, "message": "API endpoint not found"}), 404
+        
+    # Security: Don't serve sensitive files
+    if path in [".env", "qr_attendance.db", "app.py", "students.csv", "faculty.csv"]:
+        return "Access denied", 403
+
+    # Try serving the file directly (covers .png, .json, .css, .html)
+    try:
+        if os.path.exists(path):
+            return send_from_directory('.', path)
+        if os.path.exists(path + ".html"):
+            return send_from_directory('.', path + ".html")
+        return "File not found", 404
+    except Exception:
+        return "Internal error", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
