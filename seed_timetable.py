@@ -3,8 +3,8 @@ import mysql.connector
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "123456",
-    "database": "qr_attendance"
+    "password": "Delvin@2005",
+    "database": "campus_event"
 }
 
 def seed_timetable():
