@@ -1140,5 +1140,14 @@ def serve_files(path):
         return send_from_directory('.', 'index.html')
 
 if __name__ == "__main__":
+    import threading
+    import webbrowser
     port = int(os.environ.get("PORT", 8080))
+    # Only auto-open the browser if we're running locally (not on Render)
+    if "RENDER" not in os.environ and port == 8080:
+        def open_browser():
+            print("\n🌐 Auto-opening frontend in your browser...\n")
+            webbrowser.open_new(f"http://127.0.0.1:{port}/")
+        threading.Timer(1.5, open_browser).start()
+    
     app.run(host='0.0.0.0', port=port)
