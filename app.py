@@ -32,11 +32,24 @@ cipher_suite = Fernet(b'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=')
 
 # 🗄️ MySQL Database Configuration
 DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "123456",
-    "database": "qr_attendance"
+    "host": os.environ.get("DB_HOST", "localhost"),
+    "user": os.environ.get("DB_USER", "root"),
+    "password": os.environ.get("DB_PASSWORD", "123456"),
+    "database": os.environ.get("DB_NAME", "qr_attendance"),
+    "port": int(os.environ.get("DB_PORT", 3306))
 }
+
+# 🌐 Support for Render DATABASE_URL format
+db_url = os.environ.get("DATABASE_URL")
+if db_url and db_url.startswith("mysql"):
+    from urllib.parse import urlparse
+    parsed = urlparse(db_url)
+    DB_CONFIG["host"] = parsed.hostname
+    DB_CONFIG["user"] = parsed.username
+    DB_CONFIG["password"] = parsed.password
+    DB_CONFIG["database"] = parsed.path.lstrip('/')
+    if parsed.port:
+        DB_CONFIG["port"] = parsed.port
 
 def get_db():
     try:
@@ -68,7 +81,8 @@ def init_db():
         conn = mysql.connector.connect(
             host=DB_CONFIG["host"],
             user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"]
+            password=DB_CONFIG["password"],
+            port=DB_CONFIG.get("port", 3306)
         )
         cur = conn.cursor()
         cur.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
