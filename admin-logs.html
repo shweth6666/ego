@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Admin – Attendance Logs & Reports</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7fb;
+      margin: 0;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .filters,
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    select,
+    button {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    button {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .card {
+      padding: 12px;
+      border-radius: 10px;
+      background: #f1f5ff;
+      text-align: center;
+    }
+
+    .card span {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    th {
+      background: #eef2ff;
+    }
+
+    .Present {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .Late {
+      color: #f9a825;
+      font-weight: bold;
+    }
+
+    .Denied,
+    .Expired {
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    /* Logout Animation CSS */
+    .logout-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .logout-btn:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .logout-btn:active {
+      transform: translateY(0);
+    }
+
+    .logout-btn.logging-out {
+      transform: translateX(15px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .page-fade-out {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" style="position: relative;">
+    <div style="position: absolute; top: 16px; right: 16px;">
+      <button class="logout-btn" onclick="logout(this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Logout
+      </button>
+    </div>
+
+    <h2>Admin – Attendance Logs & Reports</h2>
+
+    <!-- Filters -->
+    <div class="filters">
+      <select id="branchFilter">
+        <option value="">All Branches</option>
+        <option value="CSE">CSE</option>
+        <option value="AI">AI</option>
+        <option value="Cyber">Cyber</option>
+        <option value="Mech">Mech</option>
+        <option value="Civil">Civil</option>
+      </select>
+
+      <select id="semesterFilter">
+        <option value="">All Semesters</option>
+        <option>S1</option>
+        <option>S2</option>
+        <option>S3</option>
+        <option>S4</option>
+        <option>S5</option>
+        <option>S6</option>
+        <option>S7</option>
+        <option>S8</option>
+      </select>
+
+      <button onclick="applyFilters()">Apply Filters</button>
+      <button onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="card">Total<br><span id="sTotal">0</span></div>
+      <div class="card">Present<br><span id="sPresent">0</span></div>
+      <div class="card">Late<br><span id="sLate">0</span></div>
+      <div class="card">Denied/Expired<br><span id="sDenied">0</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button onclick="loadAll()">All</button>
+      <button onclick="weekly()">Weekly</button>
+      <button onclick="monthly()">Monthly</button>
+      <button onclick="downloadCSV()">Download CSV</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date & Time</th>
+          <th>Branch</th>
+          <th>Semester</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Distance (m)</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const allLogs = JSON.parse(localStorage.getItem("attendanceLogs") || "[]");
+    let currentLogs = [...allLogs];
+
+    function applyFilters() {
+      const b = document.getElementById("branchFilter").value;
+      const s = document.getElementById("semesterFilter").value;
+
+      currentLogs = allLogs.filter(l =>
+        (!b || l.branch === b) &&
+        (!s || l.semester === s)
+      );
+      render(currentLogs);
+    }
+
+    function clearFilters() {
+      document.getElementById("branchFilter").value = "";
+      document.getElementById("semesterFilter").value = "";
+      currentLogs = [...allLogs];
+      render(currentLogs);
+    }
+
+    function loadAll() { render(currentLogs); }
+
+    function weekly() {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      render(currentLogs.filter(l => new Date(l.time).getTime() >= weekAgo));
+    }
+
+    function monthly() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      render(currentLogs.filter(l => new Date(l.time).getTime() >= start));
+    }
+
+    function updateStats(logs) {
+      document.getElementById("sTotal").innerText = logs.length;
+      document.getElementById("sPresent").innerText = logs.filter(l => l.status === "Present").length;
+      document.getElementById("sLate").innerText = logs.filter(l => l.status === "Late").length;
+      document.getElementById("sDenied").innerText = logs.filter(l => l.status === "Denied" || l.status === "Expired").length;
+    }
+
+    function render(logs) {
+      const tbody = document.getElementById("rows");
+      tbody.innerHTML = "";
+      logs.forEach((l, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${new Date(l.time).toLocaleString()}</td>
+        <td>${l.branch || "-"}</td>
+        <td>${l.semester || "-"}</td>
+        <td>${l.subject || "-"}</td>
+        <td class="${l.status}">${l.status}</td>
+        <td>${l.distance ?? "-"}</td>
+      `;
+        tbody.appendChild(tr);
+      });
+      updateStats(logs);
+    }
+
+    function downloadCSV() {
+      let csv = "DateTime,Branch,Semester,Subject,Status,Distance\n";
+      currentLogs.forEach(l => {
+        csv += `"${new Date(l.time).toLocaleString()}","${l.branch}","${l.semester}","${l.subject}","${l.status}","${l.distance ?? ""}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "attendance_report.csv";
+      a.click();
+    }
+
+    function logout(btn) {
+      if (btn) btn.classList.add("logging-out");
+      document.body.classList.add("page-fade-out");
+      localStorage.removeItem("isAdmin");
+      setTimeout(() => {
+        window.location.href = "admin.html";
+      }, 400);
+    }
+
+    render(currentLogs);
+  </script>
+
+</body>
+
+</html>

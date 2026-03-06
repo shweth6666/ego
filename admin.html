@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-box {
+      background: #ffffff;
+      padding: 28px 30px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 360px;
+    }
+    .login-box h2 { margin-bottom: 16px; color: #1f2937; }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+    }
+    button {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { opacity: 0.9; }
+    .error { color: #c62828; font-size: 13px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <input type="text" id="adminUser" placeholder="Username">
+    <input type="password" id="adminPass" placeholder="Password">
+    <button onclick="adminLogin()">Login</button>
+    <p id="adminError" class="error"></p>
+  </div>
+
+  <script>
+    function adminLogin() {
+      const u = document.getElementById("adminUser").value.trim();
+      const p = document.getElementById("adminPass").value.trim();
+
+      if (u === "admin" && p === "admin123") {
+        localStorage.setItem("isAdmin", "true");
+        window.location.href = "admin-logs.html";
+      } else {
+        document.getElementById("adminError").innerText = "Invalid admin credentials";
+      }
+    }
+  </script>
+
+</body>
+</html>

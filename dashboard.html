@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Attendance – Redirecting…</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #eef2ff, #f3e8ff);
+      font-family: 'Outfit', sans-serif;
+      color: #1e293b;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      padding: 48px 40px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+      max-width: 360px;
+      width: 90%;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #e0e7ff;
+      border-top-color: #4f46e5;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 24px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    a {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>Redirecting you…</h2>
+    <p>Taking you to your dashboard. <br><a href="index.html">Click here</a> if nothing happens.</p>
+  </div>
+
+  <script>
+    // ── Determine where the backend lives ─────────────────────────────────────
+    const API_BASE = (window.location.protocol === 'file:')
+      ? 'http://127.0.0.1:8080'
+      : window.location.origin;
+
+    const ROLE_PAGES = {
+      faculty: API_BASE + '/faculty_home.html',
+      student: API_BASE + '/student_home.html',
+      admin: API_BASE + '/admin_dashboard.html'
+    };
+
+    // Also handle old ?role= links from legacy code
+    const urlRole = new URLSearchParams(window.location.search).get('role');
+    const OLD_ROLE_MAP = {
+      teacher: 'faculty',
+      student: 'student',
+      admin: 'admin'
+    };
+
+    function redirect() {
+      const token = localStorage.getItem('access_token');
+      const userRole = localStorage.getItem('user_role');
+
+      if (token && userRole && ROLE_PAGES[userRole]) {
+        window.location.href = ROLE_PAGES[userRole];
+        return;
+      }
+
+      // Legacy redirect via ?role= query param (no backend token yet)
+      if (urlRole) {
+        const mappedRole = OLD_ROLE_MAP[urlRole] || urlRole;
+        if (ROLE_PAGES[mappedRole]) {
+          window.location.href = ROLE_PAGES[mappedRole];
+          return;
+        }
+      }
+
+      // Nothing found – go back to login
+      window.location.href = (window.location.protocol === 'file:')
+        ? 'index.html'
+        : API_BASE + '/login.html';
+    }
+
+    // Give the spinner a moment to show
+    setTimeout(redirect, 600);
+  </script>
+</body>
+
+</html>

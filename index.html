@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Attendance System – Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #e0e7ff;
+      --bg-gradient-1: #f8fafc;
+      --bg-gradient-2: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --card-bg: rgba(255, 255, 255, 0.8);
+      --card-border: rgba(255, 255, 255, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #eef2ff, #f3e8ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: auto;
+      color: var(--text-main);
+      position: relative;
+    }
+
+    /* Animated background elements */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      animation: float 10s infinite alternate ease-in-out;
+    }
+
+    .shape-1 {
+      width: 500px;
+      height: 500px;
+      background: rgba(99, 102, 241, 0.4);
+      top: -100px;
+      left: -150px;
+    }
+
+    .shape-2 {
+      width: 600px;
+      height: 600px;
+      background: rgba(216, 180, 254, 0.4);
+      bottom: -150px;
+      right: -100px;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(40px, 40px) scale(1.05);
+      }
+    }
+
+    /* Glassmorphic Login Box */
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      perspective: 1000px;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      padding: 40px;
+      border-radius: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    @keyframes cardEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .login-header {
+      margin-bottom: 30px;
+    }
+
+    .login-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    /* Forms container for sliding */
+    .forms-wrapper {
+      position: relative;
+      height: 300px;
+      /* Increased so role Continue is fully visible on smaller viewports */
+      transition: height 0.3s ease;
+      padding-bottom: 8px;
+    }
+
+    .form-section {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(50px);
+    }
+
+    .form-section.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .form-section.exit-left {
+      transform: translateX(-50px);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Role Buttons */
+    .role-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .role-btn {
+      position: relative;
+      padding: 16px;
+      border-radius: 16px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .role-btn:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    .role-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Input Fields */
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      border-radius: 14px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .input-group input::placeholder {
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      transition: color 0.3s ease;
+    }
+
+    .input-group input:focus+.input-icon {
+      color: var(--primary);
+    }
+
+    /* Action Buttons */
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), #6366f1);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 20px -10px rgba(79, 70, 229, 0.6);
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 25px -10px rgba(79, 70, 229, 0.8);
+    }
+
+    .primary-btn:active {
+      transform: translateY(1px);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      pointer-events: none;
+    }
+
+    .btn-loader {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .btn-text.loading {
+      display: none;
+    }
+
+    .btn-loader.loading {
+      display: block;
+    }
+
+    /* Links */
+    .back-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      transition: color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: var(--text-main);
+    }
+
+    .admin-link {
+      margin-top: 24px;
+      font-size: 14px;
+      text-align: center;
+      padding-top: 24px;
+      position: relative;
+    }
+
+    .admin-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 3px;
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+
+    .admin-link a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .admin-link a:hover {
+      color: var(--primary);
+    }
+
+    /* Shake animation for errors */
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      10%,
+      30%,
+      50%,
+      70%,
+      90% {
+        transform: translateX(-5px);
+      }
+
+      20%,
+      40%,
+      60%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+    }
+
+    /* Active SVGs */
+    .role-btn.active svg {
+      stroke: white;
+    }
+
+    /* Splash Screen Animations */
+    #introSplash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #eef2ff, #f3e8ff);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    .briefcase-wrapper {
+      animation: walkIn 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      position: relative;
+    }
+
+    @keyframes walkIn {
+      0% {
+        transform: translateX(-150px) translateY(-50px) rotate(-15deg) scale(0.8);
+        opacity: 0;
+      }
+
+      50% {
+        transform: translateX(20px) translateY(0) rotate(5deg) scale(1.05);
+        opacity: 1;
+      }
+
+      75% {
+        transform: translateX(-5px) rotate(-2deg) scale(0.98);
+      }
+
+      100% {
+        transform: translateX(0) rotate(0) scale(1);
+      }
+    }
+
+    .briefcase {
+      width: 100px;
+      height: 70px;
+      background: var(--primary);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 10px 20px rgba(79, 70, 229, 0.4);
+      z-index: 10;
+    }
+
+    .briefcase::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 15px;
+      border: 5px solid var(--primary);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .briefcase-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 35px;
+      background: var(--primary-hover);
+      border-radius: 8px 8px 15px 15px;
+      transform-origin: top;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 2;
+    }
+
+    .briefcase-lock {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      background: #fbbf24;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .briefcase-light {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 1;
+    }
+
+    .briefcase-wrapper.open .briefcase-flap {
+      transform: rotateX(180deg);
+    }
+
+    .briefcase-wrapper.open .briefcase-light {
+      animation: burstLight 1s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes burstLight {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      30% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(10);
+        box-shadow: 0 0 40px 20px rgba(99, 102, 241, 0.6);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(60);
+        box-shadow: 0 0 150px 150px rgba(255, 255, 255, 1);
+      }
+    }
+
+    .splash-text {
+      margin-top: 30px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+      animation: pulseText 1.5s infinite;
+      letter-spacing: 1px;
+    }
+
+    @keyframes pulseText {
+
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .splash-text.hide {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .main-content {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .main-content.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Splash Intro -->
+  <div id="introSplash">
+    <div class="briefcase-wrapper" id="briefcaseWrapper">
+      <div class="briefcase">
+        <div class="briefcase-flap">
+          <div class="briefcase-lock"></div>
+        </div>
+        <div class="briefcase-light"></div>
+      </div>
+    </div>
+    <div class="splash-text" id="splashText">Setting things up...</div>
+  </div>
+
+  <div id="mainContent" class="main-content">
+    <!-- Background Animated Shapes -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="login-container">
+      <div class="login-box" id="loginBox">
+        <div class="login-header">
+          <h2>Welcome</h2>
+          <p>Ensure your attendance seamlessly</p>
+        </div>
+
+        <div class="forms-wrapper" id="formsWrapper">
+          <!-- Step 1: Role Selection -->
+          <div class="form-section active" id="stepRole">
+            <div class="role-area">
+              <div class="role-buttons">
+                <button class="role-btn" id="btnFaculty" onclick="selectRole('teacher')">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                  </svg>
+                  Faculty Portal
+                </button>
+                <button class="role-btn" id="btnStudent" onclick="selectRole('student')">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                  Student Portal
+                </button>
+                <button class="role-btn" id="btnAdmin" onclick="selectRole('admin')">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect>
+                    <path d="M16 2v4"></path>
+                  </svg>
+                  Admin Portal
+                </button>
+              </div>
+              <button class="primary-btn" id="roleContinue" onclick="goNext()" disabled>
+                Continue
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Credentials -->
+          <div class="form-section" id="stepCredentials">
+            <button class="back-btn" onclick="goBack()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Back to roles
+            </button>
+
+            <div class="input-group">
+              <input type="text" id="username" placeholder="Username" autocomplete="off">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+
+            <div class="input-group">
+              <input type="password" id="password" placeholder="Password">
+              <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+
+            <button class="primary-btn" id="loginBtn" onclick="login()">
+              <span class="btn-text" id="btnText">Sign In</span>
+              <div class="btn-loader" id="btnLoader"></div>
+            </button>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <script>
+      // Splash Intro Sequence
+      window.addEventListener('DOMContentLoaded', () => {
+        // 1. Wait for the briefcase to "walk in" (1.5s)
+        setTimeout(() => {
+          const wrapper = document.getElementById('briefcaseWrapper');
+          const text = document.getElementById('splashText');
+
+          // 2. Open the bag & hide text
+          if (wrapper) wrapper.classList.add('open');
+          if (text) text.classList.add('hide');
+
+          // 3. After the burst of light completes (1s), reveal the main app
+          setTimeout(() => {
+            const splash = document.getElementById('introSplash');
+            const mainContent = document.getElementById('mainContent');
+            if (splash) {
+              splash.style.opacity = '0';
+              splash.style.visibility = 'hidden';
+            }
+            if (mainContent) {
+              mainContent.classList.add('visible');
+            }
+          }, 900);
+        }, 1500);
+      });
+
+      let selectedRole = "";
+
+      function selectRole(role) {
+        selectedRole = role;
+        document.getElementById("btnFaculty").classList.toggle("active", role === "teacher");
+        document.getElementById("btnStudent").classList.toggle("active", role === "student");
+        document.getElementById("btnAdmin").classList.toggle("active", role === "admin");
+        // Enable the Continue button when a role is selected
+        const cont = document.getElementById('roleContinue');
+        if (cont) cont.disabled = false;
+
+        // Remove any error shake animations
+        document.getElementById('loginBox').classList.remove('shake');
+      }
+
+      function goNext() {
+        if (!selectedRole) {
+          triggerError();
+          return;
+        }
+
+        const stepRole = document.getElementById("stepRole");
+        const stepCredentials = document.getElementById("stepCredentials");
+        const wrapper = document.getElementById("formsWrapper");
+
+        // Update wrapper height based on content
+        wrapper.style.height = "340px";
+
+        stepRole.classList.remove("active");
+        stepRole.classList.add("exit-left");
+
+        stepCredentials.classList.remove("exit-left");
+        stepCredentials.classList.add("active");
+      }
+
+      function goBack() {
+        const stepRole = document.getElementById("stepRole");
+        const stepCredentials = document.getElementById("stepCredentials");
+        const wrapper = document.getElementById("formsWrapper");
+
+        wrapper.style.height = "260px";
+
+        stepCredentials.classList.remove("active");
+
+        stepRole.classList.remove("exit-left");
+        stepRole.classList.add("active");
+
+        // Keep Continue enabled only if a role is selected
+        const cont = document.getElementById('roleContinue');
+        if (cont) cont.disabled = (selectedRole === "");
+      }
+
+      function triggerError() {
+        const box = document.getElementById('loginBox');
+        box.classList.remove('shake');
+        void box.offsetWidth; // trigger reflow
+        box.classList.add('shake');
+      }
+
+      // ── Backend URL ──────────────────────────────────────────────────────────
+      // The Flask backend serves ALL pages (login, faculty, student, admin).
+      // When the frontend is opened as a file, we point to the local dev server.
+      // In production (Render), the backend serves this HTML itself, so we use
+      // window.location.origin for the base URL.
+      const API_BASE = (window.location.protocol === 'file:')
+        ? 'http://127.0.0.1:8080'
+        : window.location.origin;
+
+      // Device fingerprinting for student device-binding security
+      function getDeviceId() {
+        const traits = [
+          navigator.userAgent,
+          navigator.platform,
+          screen.width + 'x' + screen.height,
+          navigator.language,
+          new Date().getTimezoneOffset()
+        ].join('|');
+        let hash = 0;
+        for (let i = 0; i < traits.length; i++) {
+          hash = ((hash << 5) - hash) + traits.charCodeAt(i);
+          hash |= 0;
+        }
+        return 'hw-' + Math.abs(hash).toString(36);
+      }
+
+      // Map backend role names → backend-served page paths
+      const ROLE_PAGES = {
+        faculty: API_BASE + '/faculty_home.html',
+        student: API_BASE + '/student_home.html',
+        admin:   API_BASE + '/admin_dashboard.html'
+      };
+
+      // Map the role label on this page → the backend role name
+      const ROLE_MAP = {
+        teacher: 'faculty',
+        student: 'student',
+        admin:   'admin'
+      };
+
+      async function login() {
+        const u = document.getElementById("username").value.trim();
+        const p = document.getElementById("password").value.trim();
+
+        if (!u || !p) {
+          triggerError();
+          return;
+        }
+
+        // Show loading animation
+        const btnText   = document.getElementById("btnText");
+        const btnLoader = document.getElementById("btnLoader");
+        const loginBtn  = document.getElementById("loginBtn");
+        btnText.classList.add("loading");
+        btnLoader.classList.add("loading");
+        loginBtn.style.pointerEvents = "none";
+
+        const backendRole = ROLE_MAP[selectedRole] || selectedRole;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username:  u,
+              password:  p,
+              device_id: getDeviceId()
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            // Verify the user logged into the correct portal
+            if (data.user.role !== backendRole) {
+              btnText.classList.remove("loading");
+              btnLoader.classList.remove("loading");
+              loginBtn.style.pointerEvents = "auto";
+              showLoginError(`Wrong portal! This account is a ${data.user.role}.`);
+              triggerError();
+              return;
+            }
+
+            // Persist auth data
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('user_role',    data.user.role);
+            localStorage.setItem('user_name',    data.user.name || u);
+            localStorage.setItem('student_id',   data.user.id);
+
+            // Show success before redirect
+            loginBtn.style.background = "#10b981";
+            btnText.textContent = "Authorized ✓";
+            btnText.classList.remove("loading");
+            btnLoader.classList.remove("loading");
+
+            setTimeout(() => {
+              window.location.href = ROLE_PAGES[data.user.role] || API_BASE + '/';
+            }, 700);
+
+          } else {
+            btnText.classList.remove("loading");
+            btnLoader.classList.remove("loading");
+            loginBtn.style.pointerEvents = "auto";
+            showLoginError(data.message || "Invalid credentials");
+            triggerError();
+          }
+
+        } catch (err) {
+          btnText.classList.remove("loading");
+          btnLoader.classList.remove("loading");
+          loginBtn.style.pointerEvents = "auto";
+
+          if (window.location.protocol === 'file:') {
+            showLoginError("Please open http://127.0.0.1:8080 — file:// protocol blocks API calls.");
+          } else {
+            showLoginError("Cannot reach server. Is the backend running?");
+          }
+          console.error("Login error:", err);
+          triggerError();
+        }
+      }
+
+      // Creates (or reuses) a small error label below the Sign In button
+      function showLoginError(msg) {
+        let el = document.getElementById('loginErrorMsg');
+        if (!el) {
+          el = document.createElement('p');
+          el.id = 'loginErrorMsg';
+          el.style.cssText = 'color:#ef4444;font-size:13px;margin-top:10px;text-align:center;';
+          document.getElementById('loginBtn').insertAdjacentElement('afterend', el);
+        }
+        el.textContent = msg;
+      }
+
+      // Add enter key support
+      document.getElementById("password").addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          login();
+        }
+      });
+    </script>
+
+</body>
+
+</html>
